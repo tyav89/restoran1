@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Restoran {
-    final int timeSleep = 1000;
+    final int timeSleep = 1500;
     List<String> listCustomer = new ArrayList<>();
     List<String> listOrder = new ArrayList<>();
     final Object customer = new Object();
@@ -26,6 +26,7 @@ public class Restoran {
     }
 
     public void eatAndGoOut() {
+        sleep();
         readyToOrder();
         synchronized (customer){
             while (listOrder.size() < 1) {
@@ -39,7 +40,6 @@ public class Restoran {
             System.out.printf("Посетитель %s ест\n", Thread.currentThread().getName());
             sleep();
             System.out.printf("Посетитель %s уходит\n", Thread.currentThread().getName());
-            customer.notify();
         }
 
     }

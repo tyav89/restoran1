@@ -2,34 +2,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Restoran {
-    final int timeSleep = 1500;
+    final int timeSleep = 1000;
     List<String> listCustomer = new ArrayList<>();
     List<String> listOrder = new ArrayList<>();
     final Object customer = new Object();
     final Object waiter = new Object();
+    String name;
 
-    public synchronized void makeOrder() {
+    public void makeOrder() {
         synchronized (waiter) {
-            while (listCustomer.size() < 1) {
+            while (listCustomer.size() == 0) {
                 try {
                     waiter.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            System.out.printf("Официант %s принял заказ у %s\n", Thread.currentThread().getName(), listCustomer.get(0));
+            name = listCustomer.remove(0);
+            System.out.printf("Официант %s принял заказ у %s\n", Thread.currentThread().getName(), name);
             sleep();
-            System.out.printf("Официант %s несет заказ %s\n", Thread.currentThread().getName(), listCustomer.get(0));
-            listOrder.add(listCustomer.remove(0));
-            orderReady();
+            System.out.printf("Официант %s несет заказ %s\n", Thread.currentThread().getName(), name);
+            listOrder.add(name);
         }
+        orderReady();
     }
 
     public void eatAndGoOut() {
-        sleep();
         readyToOrder();
-        synchronized (customer){
-            while (listOrder.size() < 1) {
+        synchronized (customer) {
+            while (listOrder.size() == 0 || listOrder.size() > 3) {
                 try {
                     customer.wait();
                 } catch (InterruptedException e) {
@@ -41,8 +42,8 @@ public class Restoran {
             sleep();
             System.out.printf("Посетитель %s уходит\n", Thread.currentThread().getName());
         }
-
     }
+
 
     private void sleep() {
         try {

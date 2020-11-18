@@ -1,49 +1,56 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Restoran {
-    final int timeSleep = 1000;
-    List<String> listCustomer = new ArrayList<>();
-    List<String> listOrder = new ArrayList<>();
-    final Object customer = new Object();
-    final Object waiter = new Object();
-    String name;
+    private final Object lock1 = new Object();
+    private final Object lock2 = new Object();
+    private Deque<Visitors> dequeVisitors = new ConcurrentLinkedDeque<>();
+    private Deque<String> dequeOrders = new ConcurrentLinkedDeque<>();
+    private int timeSleep = 1000;
 
-    public void makeOrder() {
-        synchronized (waiter) {
-            while (listCustomer.size() == 0) {
+    public void takeOrders() {
+        synchronized (lock1) {
+            while (dequeVisitors.isEmpty()) {
                 try {
-                    waiter.wait();
+                    lock1.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            name = listCustomer.remove(0);
-            System.out.printf("Официант %s принял заказ у %s\n", Thread.currentThread().getName(), name);
-            sleep();
-            System.out.printf("Официант %s несет заказ %s\n", Thread.currentThread().getName(), name);
-            listOrder.add(name);
         }
-        orderReady();
+        String name = dequeVisitors.remove().getName();
+        System.out.printf("Официант %s принял заказ у %s\n", Thread.currentThread().getName(), name);
+        sleep();
+        System.out.printf("Официант %s несет заказ %s\n", Thread.currentThread().getName(), name);
+        dequeOrders.add(name);
+        synchronized (lock2){
+            lock2.notify();
+        }
     }
 
     public void eatAndGoOut() {
-        readyToOrder();
-        synchronized (customer) {
-            while (listOrder.size() == 0 || listOrder.size() > 3) {
+        synchronized (lock2) {
+            while (dequeOrders.isEmpty()){
                 try {
-                    customer.wait();
+                    lock2.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            listOrder.remove(0);
-            System.out.printf("Посетитель %s ест\n", Thread.currentThread().getName());
-            sleep();
-            System.out.printf("Посетитель %s уходит\n", Thread.currentThread().getName());
         }
+        dequeOrders.remove();
+        System.out.printf("Посетитель %s ест\n", Thread.currentThread().getName());
+        sleep();
+        System.out.printf("Посетитель %s уходит\n", Thread.currentThread().getName());
+
     }
 
+    public void addVisitors(Visitors visitors) {
+        dequeVisitors.add(visitors);
+        synchronized (lock1){
+            lock1.notify();
+        }
+    }
 
     private void sleep() {
         try {
@@ -53,19 +60,4 @@ public class Restoran {
         }
     }
 
-    public void addCustomer(String name) {
-        listCustomer.add(name);
-    }
-
-    private void readyToOrder() {
-        synchronized (waiter) {
-            waiter.notify();
-        }
-    }
-
-    private void orderReady() {
-        synchronized (customer) {
-            customer.notify();
-        }
-    }
 }

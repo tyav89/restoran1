@@ -1,11 +1,11 @@
-import java.util.Deque;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Restoran {
     private final Object lock1 = new Object();
     private final Object lock2 = new Object();
-    private Deque<Visitors> dequeVisitors = new ConcurrentLinkedDeque<>();
-    private Deque<String> dequeOrders = new ConcurrentLinkedDeque<>();
+    private Queue<Visitors> dequeVisitors = new ConcurrentLinkedDeque<>();
+    private Queue<String> dequeOrders = new ConcurrentLinkedDeque<>();
     private int timeSleep = 1000;
 
     public void takeOrders() {
